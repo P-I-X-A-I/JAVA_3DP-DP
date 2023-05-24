@@ -36,18 +36,19 @@ public class GUI_Manager implements GLEventListener, ActionListener{
 	// GUI variables
 	public JComboBox<String> combo_obj;
 	
+	
 	// constructor
-	public GUI_Manager(mainController m)
+	public GUI_Manager(mainController m, Menu_Action_Listener MAL)
 	{
 		System.out.println("GUI_Manager init");
 			
 		
-		// setup opengl ***********************************
-		//System.out.println("setup opengl");
+		// setup openGL ***********************************
+		System.out.println("*** setup opengl (in GUI_Manager)***");
 		GLProfile profile = GLProfile.get(GLProfile.GL4);
 		GLCapabilities caps = new GLCapabilities(profile);
 		
-		// setup canval from capabilities
+		// setup canvas from capabilities
 		System.out.println("create canvas");
 		glCanvas = new GLJPanel(caps);
 		glCanvas.addGLEventListener(this);
@@ -67,43 +68,87 @@ public class GUI_Manager implements GLEventListener, ActionListener{
 		
 		// create menu ****************************
 		JMenuBar menuBar = new JMenuBar();
+//.................................
 		JMenu fileMenu = new JMenu("file");
 		JMenuItem openItem = new JMenuItem("Open");
+		fileMenu.add(openItem);
+//................................
+		JMenu settingMenu = new JMenu("Setting");
+		JMenuItem settingItem = new JMenuItem("Printer Settings");
+		settingMenu.add(settingItem);
+//................................
+		
 		// set callback
 		openItem.setActionCommand("menu_open");
-		openItem.addActionListener(this);
-		fileMenu.add(openItem);
+		openItem.addActionListener(MAL);
+		settingItem.setActionCommand("print_stgs");
+		settingItem.addActionListener(MAL);
+		
+		// add to menubar
 		menuBar.add(fileMenu);
+		menuBar.add(settingMenu);
+		
+		
 		mainWindow.setJMenuBar(menuBar);
 		//******************************************
 		
 		// get content pane *****************************
-		Container contentPane = mainWindow.getContentPane();
+		Container mainWin_Pane = mainWindow.getContentPane();
 		//contentPane.setLayout(new GridLayout(2, 2));
 		// set layoutmanager to null
-		contentPane.setLayout(null);
+		mainWin_Pane.setLayout(null);
 		
 		// add glCanvas to window
-		contentPane.add(glCanvas);
+		mainWin_Pane.add(glCanvas);
 		glCanvas.setBounds(200, 0, 800, 650);
 		
 		
 		
 		// setup other GUI
+		JLabel selectPrinter_Label = new JLabel("1.Select Printer");
+		mainWin_Pane.add(selectPrinter_Label);
+		selectPrinter_Label.setBounds(10, 10, 150, 20);
+		
 		String[] options = {"printer-1", "printer-2", "printer-3"};
 		combo_obj = new JComboBox<>(options);
-		contentPane.add(combo_obj);
-		combo_obj.setBounds(10, 10, 150, 20);
+		mainWin_Pane.add(combo_obj);
+		combo_obj.setBounds(10, 40, 170, 20);
+//..........................
+		JLabel loadSTL_Label = new JLabel("2.Load STL files");
+		mainWin_Pane.add(loadSTL_Label);
+		loadSTL_Label.setBounds(10, 85, 150, 20);
 		
+		JButton load_bt = new JButton("Load");
+		JButton delete_bt = new JButton("Delete");
+		mainWin_Pane.add(load_bt);
+		mainWin_Pane.add(delete_bt);
+		load_bt.setBounds(10, 110, 80, 20);
+		delete_bt.setBounds(100, 110, 80, 20);
 		
+		load_bt.setActionCommand("BT_LOAD");
+		delete_bt.setActionCommand("BT_DELETE");
+		load_bt.addActionListener(MAL);
+		delete_bt.addActionListener(MAL);
 		
-		// timer setup ***************************************
+	//.................................
+		DefaultListModel<String>listModel = new DefaultListModel<>();
+		listModel.addElement("data_1.stl");
+		listModel.addElement("data2.stl");
+		listModel.addElement("data_3.stl");
+		
+        JList<String> listView = new JList<>(listModel);
+        JScrollPane scrollPane = new JScrollPane(listView);
+        
+        mainWin_Pane.add(scrollPane);
+        scrollPane.setBounds(10, 140, 170, 200);
+        
+        // timer setup ***************************************
 		timer_obj = new Timer(1000, e->glCanvas.repaint());
 		timer_obj.start();
 	}
 	
 	
-	// EventListener method *******************
+	// GLEventListener method *******************
 	public void display(GLAutoDrawable arg0)
 	{
 		System.out.println("display");
@@ -144,16 +189,12 @@ public class GUI_Manager implements GLEventListener, ActionListener{
 		//System.out.printf("reshape %d, %d, %d, %d", arg1, arg2, arg3, arg4);
 	}
 	// EventListener method *******************
-
+	
+	
+	
 	// ActionListener method ******************
 	public void actionPerformed(ActionEvent e)
 	{
-		String actionCommand = e.getActionCommand();
-		
-		if( actionCommand.equals("menu_open")) 
-		{
-			System.out.println("menu_open_selected");
-		}
 	}
 	// ActionListener method ******************
 	
