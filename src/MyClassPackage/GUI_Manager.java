@@ -142,6 +142,54 @@ public class GUI_Manager implements GLEventListener, ActionListener{
         mainWin_Pane.add(scrollPane);
         scrollPane.setBounds(10, 140, 170, 200);
         
+ //..............................................
+        JLabel rotate_label = new JLabel("rotate object");
+        mainWin_Pane.add(rotate_label);
+        rotate_label.setBounds(10, 360, 170, 20);
+        
+        JButton p45_bt = new JButton("+45");
+        JButton m45_bt = new JButton("-45");
+        p45_bt.setActionCommand("plus_45");
+        m45_bt.setActionCommand("minus_45");
+        p45_bt.addActionListener(MAL);
+        m45_bt.addActionListener(MAL);
+        
+        mainWin_Pane.add(p45_bt);
+        mainWin_Pane.add(m45_bt);
+        p45_bt.setBounds(10, 390, 60, 20);
+        m45_bt.setBounds(80, 390, 60, 20);
+        
+        JRadioButton xAxis_rd = new JRadioButton("x");
+        JRadioButton yAxis_rd = new JRadioButton("y");
+        JRadioButton zAxis_rd = new JRadioButton("z");
+        ButtonGroup bt_group = new ButtonGroup();
+        
+        bt_group.add(xAxis_rd);
+        bt_group.add(yAxis_rd);
+        bt_group.add(zAxis_rd);
+        xAxis_rd.setSelected(true);
+        
+        mainWin_Pane.add(xAxis_rd);
+        mainWin_Pane.add(yAxis_rd);
+        mainWin_Pane.add(zAxis_rd);
+        xAxis_rd.setActionCommand("radio_x");
+        yAxis_rd.setActionCommand("radio_y");
+        zAxis_rd.setActionCommand("radio_z");
+        xAxis_rd.addActionListener(MAL);
+        yAxis_rd.addActionListener(MAL);
+        zAxis_rd.addActionListener(MAL);
+        xAxis_rd.setBounds(10, 420, 50, 20);
+        yAxis_rd.setBounds(60, 420, 50, 20);
+        zAxis_rd.setBounds(120, 420, 50, 20);
+        
+        
+        // convert file button
+        JButton convert_bt = new JButton("convert");
+        convert_bt.setActionCommand("convert_button");
+        convert_bt.addActionListener(MAL);
+        mainWin_Pane.add(convert_bt);
+        convert_bt.setBounds(10, 500, 150, 40);
+        
         // timer setup ***************************************
 		timer_obj = new Timer(1000, e->glCanvas.repaint());
 		timer_obj.start();
