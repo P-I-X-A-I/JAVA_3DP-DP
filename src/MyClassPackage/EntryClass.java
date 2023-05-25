@@ -18,5 +18,6 @@ public class EntryClass{
 		// set object to mainController
 		mc_obj.set_GUI_obj(GUI_obj);
 		mc_obj.set_MenuAction_obj(MenuListener_obj);
+		
 	}
 }

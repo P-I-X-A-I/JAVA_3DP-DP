@@ -29,12 +29,28 @@ import com.jogamp.opengl.awt.GLJPanel;
 // need implement eventListener
 public class GUI_Manager implements GLEventListener, ActionListener{
 
-	public JFrame mainWindow;
-	public GLJPanel glCanvas;
-	public Timer timer_obj;
+	JFrame mainWindow;
+	GLJPanel glCanvas;
+	Timer timer_obj;
 	
 	// GUI variables
-	public JComboBox<String> combo_obj;
+	// labels
+	JLabel LB_select_printer;
+	JLabel LB_load_stl;
+	JComboBox<String> combo_obj;
+	JLabel LB_rotate;
+	
+	// button
+	JButton BT_load_stl;
+	JButton BT_delete_stl;
+	JButton BT_plus_45;
+	JButton BT_minus_45;
+	JButton BT_convert;
+	
+	// stl list view
+	DefaultListModel<String> ListModel;
+	JList<String> ListView_STL;
+	JScrollPane Scroll_STL;
 	
 	
 	// constructor
@@ -105,59 +121,67 @@ public class GUI_Manager implements GLEventListener, ActionListener{
 		
 		
 		// setup other GUI
-		JLabel selectPrinter_Label = new JLabel("1.Select Printer");
-		mainWin_Pane.add(selectPrinter_Label);
-		selectPrinter_Label.setBounds(10, 10, 150, 20);
+		// 1.select printer
+		LB_select_printer = new JLabel("1.Select Printer");
+		mainWin_Pane.add(LB_select_printer);
+		LB_select_printer.setBounds(10, 10, 150, 20);
 		
+		// printer combobox
 		String[] options = {"printer-1", "printer-2", "printer-3"};
 		combo_obj = new JComboBox<>(options);
 		mainWin_Pane.add(combo_obj);
 		combo_obj.setBounds(10, 40, 170, 20);
-//..........................
-		JLabel loadSTL_Label = new JLabel("2.Load STL files");
-		mainWin_Pane.add(loadSTL_Label);
-		loadSTL_Label.setBounds(10, 85, 150, 20);
+
+		// 2. load stl label
+		LB_load_stl = new JLabel("2.Load STL files");
+		mainWin_Pane.add(LB_load_stl);
+		LB_load_stl.setBounds(10, 85, 150, 20);
 		
-		JButton load_bt = new JButton("Load");
-		JButton delete_bt = new JButton("Delete");
-		mainWin_Pane.add(load_bt);
-		mainWin_Pane.add(delete_bt);
-		load_bt.setBounds(10, 110, 80, 20);
-		delete_bt.setBounds(100, 110, 80, 20);
+		BT_load_stl = new JButton("Load");
+		BT_delete_stl = new JButton("Delete");
+		mainWin_Pane.add(BT_load_stl);
+		mainWin_Pane.add(BT_delete_stl);
+		BT_load_stl.setBounds(10, 110, 80, 20);
+		BT_delete_stl.setBounds(100, 110, 80, 20);
 		
-		load_bt.setActionCommand("BT_LOAD");
-		delete_bt.setActionCommand("BT_DELETE");
-		load_bt.addActionListener(MAL);
-		delete_bt.addActionListener(MAL);
+		BT_load_stl.setActionCommand("BT_LOAD");
+		BT_delete_stl.setActionCommand("BT_DELETE");
+		BT_load_stl.addActionListener(MAL);
+		BT_delete_stl.addActionListener(MAL);
 		
-	//.................................
-		DefaultListModel<String>listModel = new DefaultListModel<>();
-		listModel.addElement("data_1.stl");
-		listModel.addElement("data2.stl");
-		listModel.addElement("data_3.stl");
+		//STL list view ***********************
+		ListModel = new DefaultListModel<>();
+		ListModel.addElement("data_1.stl");
+		ListModel.addElement("data2.stl");
+		ListModel.addElement("data_3.stl");
 		
-        JList<String> listView = new JList<>(listModel);
-        JScrollPane scrollPane = new JScrollPane(listView);
+        ListView_STL = new JList<>(ListModel);
+        Scroll_STL = new JScrollPane(ListView_STL);
         
-        mainWin_Pane.add(scrollPane);
-        scrollPane.setBounds(10, 140, 170, 200);
+        mainWin_Pane.add(Scroll_STL);
+        Scroll_STL.setBounds(10, 140, 170, 200);
+        /*
+        ListModel.removeAllElements();
+        ListModel.addElement("testSTL.stl");
+        ListModel.addElement("parts.stl");
+        */
         
  //..............................................
-        JLabel rotate_label = new JLabel("rotate object");
-        mainWin_Pane.add(rotate_label);
-        rotate_label.setBounds(10, 360, 170, 20);
+        LB_rotate = new JLabel("rotate object");
+        mainWin_Pane.add(LB_rotate);
+        LB_rotate.setBounds(10, 360, 170, 20);
         
-        JButton p45_bt = new JButton("+45");
-        JButton m45_bt = new JButton("-45");
-        p45_bt.setActionCommand("plus_45");
-        m45_bt.setActionCommand("minus_45");
-        p45_bt.addActionListener(MAL);
-        m45_bt.addActionListener(MAL);
+        BT_plus_45 = new JButton("+45");
+        BT_minus_45 = new JButton("-45");
+        BT_plus_45.setActionCommand("plus_45");
+        BT_minus_45.setActionCommand("minus_45");
+        BT_plus_45.addActionListener(MAL);
+        BT_minus_45.addActionListener(MAL);
         
-        mainWin_Pane.add(p45_bt);
-        mainWin_Pane.add(m45_bt);
-        p45_bt.setBounds(10, 390, 60, 20);
-        m45_bt.setBounds(80, 390, 60, 20);
+        mainWin_Pane.add(BT_plus_45);
+        mainWin_Pane.add(BT_minus_45);
+        BT_plus_45.setBounds(10, 390, 60, 20);
+        BT_minus_45.setBounds(80, 390, 60, 20);
         
         JRadioButton xAxis_rd = new JRadioButton("x");
         JRadioButton yAxis_rd = new JRadioButton("y");
@@ -184,11 +208,11 @@ public class GUI_Manager implements GLEventListener, ActionListener{
         
         
         // convert file button
-        JButton convert_bt = new JButton("convert");
-        convert_bt.setActionCommand("convert_button");
-        convert_bt.addActionListener(MAL);
-        mainWin_Pane.add(convert_bt);
-        convert_bt.setBounds(10, 500, 150, 40);
+        BT_convert = new JButton("convert");
+        BT_convert.setActionCommand("convert_button");
+        BT_convert.addActionListener(MAL);
+        mainWin_Pane.add(BT_convert);
+        BT_convert.setBounds(10, 500, 150, 40);
         
         // timer setup ***************************************
 		timer_obj = new Timer(1000, e->glCanvas.repaint());
