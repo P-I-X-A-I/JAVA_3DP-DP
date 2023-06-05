@@ -16,6 +16,8 @@ import javax.swing.*;
 //import javax.swing.JMenuItem;
 //import javax.swing.Timer;
 //import javax.swing.JComboBox;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.GLAutoDrawable;
@@ -25,20 +27,30 @@ import com.jogamp.opengl.GLProfile;
 //import com.jogamp.opengl.awt.GLCanvas;
 import com.jogamp.opengl.awt.GLJPanel;
 
+import com.jogamp.opengl.util.Animator;
 
 // need implement eventListener
-public class GUI_Manager implements GLEventListener, ActionListener{
+public class GUI_Manager{
 
 	JFrame mainWindow;
+	JFrame paramWindow;
 	GLJPanel glCanvas;
+	GL_Draw GLDraw_obj;
 	Timer timer_obj;
+	DragAndDropHandler DAD_obj;
 	
 	// GUI variables
-	// labels
+	// labels (main Window)
 	JLabel LB_select_printer;
 	JLabel LB_load_stl;
 	JComboBox<String> combo_obj;
 	JLabel LB_rotate;
+	// labels (parameter Window)
+	JLabel LB_layer_height;
+	JLabel LB_perimeter;
+	JLabel LB_infill;
+	JLabel LB_pattern;
+	JLabel LB_temperature;
 	
 	// button
 	JButton BT_load_stl;
@@ -46,6 +58,26 @@ public class GUI_Manager implements GLEventListener, ActionListener{
 	JButton BT_plus_45;
 	JButton BT_minus_45;
 	JButton BT_convert;
+	
+	// radio button
+    JRadioButton xAxis_rd;
+    JRadioButton yAxis_rd;
+    JRadioButton zAxis_rd;
+    ButtonGroup bt_group;
+    JRadioButton RAD_infill_grid;
+    JRadioButton RAD_infill_gyroid;
+    JRadioButton RAD_infill_3dhc;
+    ButtonGroup infill_group;
+    
+    // checkbox
+    JCheckBox CHK_support;
+    JCheckBox CHK_raft;
+    
+	// Slider
+	JSlider SLI_layer_height;
+	JSlider SLI_perimeter;
+	JSlider SLI_infill;
+	JSlider SLI_temperature;
 	
 	// stl list view
 	DefaultListModel<String> ListModel;
@@ -67,80 +99,89 @@ public class GUI_Manager implements GLEventListener, ActionListener{
 		// setup canvas from capabilities
 		System.out.println("create canvas");
 		glCanvas = new GLJPanel(caps);
-		glCanvas.addGLEventListener(this);
-		glCanvas.setPreferredSize(new Dimension(200, 200));
+
+		// create GLobj and set to canvas
+		GLDraw_obj = new GL_Draw();
+		GLDraw_obj.mc_obj = m;
+		glCanvas.addGLEventListener(GLDraw_obj);
+		//glCanvas.addGLEventListener(this);
+		//glCanvas.setPreferredSize(new Dimension(200, 200));
 		glCanvas.setAutoSwapBufferMode(false);
 		
 		
 		// Create main window *********************************
 		mainWindow = new JFrame("3DP-DP");
-		//mainWindow.setSize(800, 600);
-		mainWindow.setBounds(200, 200, 1000, 650);
+		mainWindow.setSize(1000, 650);
+		mainWindow.setBounds(300, 100, 1000, 650);
 		mainWindow.setResizable(false);
 		// layout
 		mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		mainWindow.setLayout(null);
 		mainWindow.setVisible(true);
-		//****************************************************
 		
-		// create menu ****************************
-		JMenuBar menuBar = new JMenuBar();
-//.................................
-		JMenu fileMenu = new JMenu("file");
-		JMenuItem openItem = new JMenuItem("Open");
-		fileMenu.add(openItem);
-//................................
-		JMenu settingMenu = new JMenu("Setting");
-		JMenuItem settingItem = new JMenuItem("Printer Settings");
-		settingMenu.add(settingItem);
-//................................
+		// set DragAndDrop to mainWindow
+		DAD_obj = new DragAndDropHandler();
+		DAD_obj.mc_obj = m;
+		mainWindow.setTransferHandler(DAD_obj);
 		
-		// set callback
-		openItem.setActionCommand("menu_open");
-		openItem.addActionListener(MAL);
-		settingItem.setActionCommand("print_stgs");
-		settingItem.addActionListener(MAL);
-		
-		// add to menubar
-		menuBar.add(fileMenu);
-		menuBar.add(settingMenu);
-		
-		
-		mainWindow.setJMenuBar(menuBar);
-		//******************************************
-		
-		// get content pane *****************************
-		Container mainWin_Pane = mainWindow.getContentPane();
-		//contentPane.setLayout(new GridLayout(2, 2));
-		// set layoutmanager to null
-		mainWin_Pane.setLayout(null);
-		
-		// add glCanvas to window
-		mainWin_Pane.add(glCanvas);
+// add glCanvas to window *****************************
+		mainWindow.getContentPane().add(glCanvas);
 		glCanvas.setBounds(200, 0, 800, 650);
 		
+		
+		// create menu ****************************
+				JMenuBar menuBar = new JMenuBar();
+		//.................................
+				JMenu fileMenu = new JMenu("file");
+				JMenuItem openItem = new JMenuItem("Open");
+				fileMenu.add(openItem);
+		//................................
+				JMenu settingMenu = new JMenu("Setting");
+				JMenuItem settingItem = new JMenuItem("Printer Settings");
+				settingMenu.add(settingItem);
+		//................................
+				
+				// set callback
+				openItem.setActionCommand("menu_open");
+				openItem.addActionListener(MAL);
+				settingItem.setActionCommand("print_stgs");
+				settingItem.addActionListener(MAL);
+				
+				// add to menubar
+				menuBar.add(fileMenu);
+				menuBar.add(settingMenu);
+				
+				mainWindow.setJMenuBar(menuBar);
+				//******************************************
+		// the timing call "setVisible" is important to draw window GUI correctly.
+		mainWindow.setVisible(true);
+				
+
 		
 		
 		// setup other GUI
 		// 1.select printer
 		LB_select_printer = new JLabel("1.Select Printer");
-		mainWin_Pane.add(LB_select_printer);
+		mainWindow.getContentPane().add(LB_select_printer);
 		LB_select_printer.setBounds(10, 10, 150, 20);
 		
 		// printer combobox
 		String[] options = {"printer-1", "printer-2", "printer-3"};
 		combo_obj = new JComboBox<>(options);
-		mainWin_Pane.add(combo_obj);
+		mainWindow.getContentPane().add(combo_obj);
 		combo_obj.setBounds(10, 40, 170, 20);
+		combo_obj.setActionCommand("printer_combo");
+		combo_obj.addActionListener(MAL);
 
 		// 2. load stl label
 		LB_load_stl = new JLabel("2.Load STL files");
-		mainWin_Pane.add(LB_load_stl);
+		mainWindow.getContentPane().add(LB_load_stl);
 		LB_load_stl.setBounds(10, 85, 150, 20);
 		
 		BT_load_stl = new JButton("Load");
 		BT_delete_stl = new JButton("Delete");
-		mainWin_Pane.add(BT_load_stl);
-		mainWin_Pane.add(BT_delete_stl);
+		mainWindow.getContentPane().add(BT_load_stl);
+		mainWindow.getContentPane().add(BT_delete_stl);
 		BT_load_stl.setBounds(10, 110, 80, 20);
 		BT_delete_stl.setBounds(100, 110, 80, 20);
 		
@@ -151,14 +192,13 @@ public class GUI_Manager implements GLEventListener, ActionListener{
 		
 		//STL list view ***********************
 		ListModel = new DefaultListModel<>();
-		ListModel.addElement("data_1.stl");
-		ListModel.addElement("data2.stl");
-		ListModel.addElement("data_3.stl");
 		
         ListView_STL = new JList<>(ListModel);
+        ListView_STL.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
         Scroll_STL = new JScrollPane(ListView_STL);
         
-        mainWin_Pane.add(Scroll_STL);
+        mainWindow.getContentPane().add(Scroll_STL);
         Scroll_STL.setBounds(10, 140, 170, 200);
         /*
         ListModel.removeAllElements();
@@ -168,7 +208,7 @@ public class GUI_Manager implements GLEventListener, ActionListener{
         
  //..............................................
         LB_rotate = new JLabel("rotate object");
-        mainWin_Pane.add(LB_rotate);
+        mainWindow.getContentPane().add(LB_rotate);
         LB_rotate.setBounds(10, 360, 170, 20);
         
         BT_plus_45 = new JButton("+45");
@@ -178,24 +218,26 @@ public class GUI_Manager implements GLEventListener, ActionListener{
         BT_plus_45.addActionListener(MAL);
         BT_minus_45.addActionListener(MAL);
         
-        mainWin_Pane.add(BT_plus_45);
-        mainWin_Pane.add(BT_minus_45);
+        mainWindow.getContentPane().add(BT_plus_45);
+        mainWindow.getContentPane().add(BT_minus_45);
         BT_plus_45.setBounds(10, 390, 60, 20);
         BT_minus_45.setBounds(80, 390, 60, 20);
         
-        JRadioButton xAxis_rd = new JRadioButton("x");
-        JRadioButton yAxis_rd = new JRadioButton("y");
-        JRadioButton zAxis_rd = new JRadioButton("z");
-        ButtonGroup bt_group = new ButtonGroup();
+        
+        // rotation radio button
+        xAxis_rd = new JRadioButton("x");
+        yAxis_rd = new JRadioButton("y");
+        zAxis_rd = new JRadioButton("z");
+        bt_group = new ButtonGroup();
         
         bt_group.add(xAxis_rd);
         bt_group.add(yAxis_rd);
         bt_group.add(zAxis_rd);
         xAxis_rd.setSelected(true);
         
-        mainWin_Pane.add(xAxis_rd);
-        mainWin_Pane.add(yAxis_rd);
-        mainWin_Pane.add(zAxis_rd);
+        mainWindow.getContentPane().add(xAxis_rd);
+        mainWindow.getContentPane().add(yAxis_rd);
+        mainWindow.getContentPane().add(zAxis_rd);
         xAxis_rd.setActionCommand("radio_x");
         yAxis_rd.setActionCommand("radio_y");
         zAxis_rd.setActionCommand("radio_z");
@@ -211,63 +253,157 @@ public class GUI_Manager implements GLEventListener, ActionListener{
         BT_convert = new JButton("convert");
         BT_convert.setActionCommand("convert_button");
         BT_convert.addActionListener(MAL);
-        mainWin_Pane.add(BT_convert);
+        mainWindow.getContentPane().add(BT_convert);
         BT_convert.setBounds(10, 500, 150, 40);
         
-        // timer setup ***************************************
-		timer_obj = new Timer(1000, e->glCanvas.repaint());
+//*******************************************      
+// Create parameter window*******************
+//*******************************************
+     	paramWindow = new JFrame("Parameter Settings");
+     	paramWindow.setBounds(20, 100, 250, 400);
+     	paramWindow.setResizable(false);
+     	paramWindow.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+     	paramWindow.setLayout(null);
+     	paramWindow.setVisible(true);
+     		
+     	// setup parameter window GUI
+     	// Layer height
+     	LB_layer_height = new JLabel("Layer height : 0.3mm");
+     	paramWindow.getContentPane().add(LB_layer_height);
+     	LB_layer_height.setBounds(10, 10, 240, 20);
+     		
+     	SLI_layer_height = new JSlider(0, 5, 2);
+     	SLI_layer_height.setPaintTicks(true);
+     	SLI_layer_height.setSnapToTicks(true);
+     	SLI_layer_height.setMajorTickSpacing(1);
+     	SLI_layer_height.setMinorTickSpacing(1);
+     	SLI_layer_height.addChangeListener( new ChangeListener() {
+     	public void stateChanged(ChangeEvent e) {
+     		int sli_val = SLI_layer_height.getValue();
+     		String mmStr = String.format("Layer height : %1.2fmm", 0.2+sli_val*0.05);
+     		LB_layer_height.setText(mmStr);
+     		}
+     	});
+     	paramWindow.getContentPane().add(SLI_layer_height);
+     	SLI_layer_height.setBounds(10, 40, 210, 20);
+     		
+     	// perimeter
+     	LB_perimeter = new JLabel("Perimeters : 2");
+     	paramWindow.getContentPane().add(LB_perimeter);
+     	LB_perimeter.setBounds(10, 60, 200, 20);
+     		
+     	SLI_perimeter = new JSlider(0, 4, 1);
+     	SLI_perimeter.setPaintTicks(true);
+     	SLI_perimeter.setSnapToTicks(true);
+     	SLI_perimeter.setMajorTickSpacing(1);
+     	SLI_perimeter.setMinorTickSpacing(1);
+     	SLI_perimeter.addChangeListener(new ChangeListener() {
+     		public void stateChanged(ChangeEvent e) {
+     			int sli_val = SLI_perimeter.getValue();
+     			LB_perimeter.setText("Perimeters : " + (sli_val+1));
+     		}
+     	});
+     	paramWindow.getContentPane().add(SLI_perimeter);
+     	SLI_perimeter.setBounds(10, 90, 210, 20);
+        
+     	
+     	// infill density
+     	LB_infill = new JLabel("Infill density : 10%");
+     	paramWindow.getContentPane().add(LB_infill);
+     	LB_infill.setBounds(10, 110, 200, 20);
+     	
+     	SLI_infill = new JSlider(0, 20, 2);
+     	SLI_infill.setPaintTicks(true);
+     	SLI_infill.setSnapToTicks(true);
+     	SLI_infill.setMajorTickSpacing(1);
+     	SLI_infill.setMinorTickSpacing(1);
+     	SLI_infill.addChangeListener(new ChangeListener() {
+     		public void stateChanged(ChangeEvent e) {
+     			int sli_val = SLI_infill.getValue();
+     			LB_infill.setText("Infill density : "+(sli_val*5) + "%");
+     		}
+     	});
+     	paramWindow.getContentPane().add(SLI_infill);
+     	SLI_infill.setBounds(10, 140, 210, 20);
+     	
+     	// infill pattern radio button
+     	LB_pattern = new JLabel("Infill pattern");
+     	paramWindow.getContentPane().add(LB_pattern);
+     	LB_pattern.setBounds(10, 175, 200, 20);
+     	
+     	RAD_infill_grid = new JRadioButton("grid");
+     	RAD_infill_gyroid = new JRadioButton("gyroid");
+     	RAD_infill_3dhc = new JRadioButton("3D-hc");
+     	infill_group = new ButtonGroup();
+     	
+     	infill_group.add(RAD_infill_grid);
+     	infill_group.add(RAD_infill_gyroid);
+     	infill_group.add(RAD_infill_3dhc);
+     	RAD_infill_3dhc.setSelected(true);
+     	
+     	paramWindow.getContentPane().add(RAD_infill_grid);
+     	paramWindow.getContentPane().add(RAD_infill_gyroid);
+     	paramWindow.getContentPane().add(RAD_infill_3dhc);
+     	RAD_infill_grid.setActionCommand("infill_grid");
+     	RAD_infill_gyroid.setActionCommand("infill_gyroid");
+     	RAD_infill_3dhc.setActionCommand("infill_3dhc");
+     	RAD_infill_grid.addActionListener(MAL);
+     	RAD_infill_gyroid.addActionListener(MAL);
+     	RAD_infill_3dhc.addActionListener(MAL);
+     	RAD_infill_grid.setBounds(10, 200, 60, 20);
+     	RAD_infill_gyroid.setBounds(70, 200, 60, 20);
+     	RAD_infill_3dhc.setBounds(140, 200, 80, 20);
+     	
+// support, raft checkbox
+     	CHK_support = new JCheckBox("support");
+     	CHK_support.setSelected(false);
+     	CHK_support.setActionCommand("check_support");
+     	CHK_support.addActionListener(MAL);
+     	paramWindow.getContentPane().add(CHK_support);
+     	CHK_support.setBounds(10, 240, 200, 20);
+     	
+     	CHK_raft = new JCheckBox("raft");
+     	CHK_raft.setSelected(false);
+     	CHK_raft.setActionCommand("check_raft");
+     	CHK_raft.addActionListener(MAL);
+     	paramWindow.getContentPane().add(CHK_raft);
+     	CHK_raft.setBounds(10, 265, 200, 20);
+     	
+// temperature slider
+     	LB_temperature = new JLabel("Temperature : 215");
+     	paramWindow.getContentPane().add(LB_temperature);
+     	LB_temperature.setBounds(10, 300, 200, 20);
+     	
+     	SLI_temperature = new JSlider(0, 10, 3);
+     	SLI_temperature.setPaintTicks(true);
+     	SLI_temperature.setSnapToTicks(true);
+     	SLI_temperature.setMajorTickSpacing(2);
+     	SLI_temperature.setMinorTickSpacing(1);
+     	SLI_temperature.addChangeListener(new ChangeListener() {
+     		public void stateChanged(ChangeEvent e) {
+     			int sli_val = SLI_temperature.getValue();
+     			LB_temperature.setText("Temperature : "+((sli_val*5)+190));
+     		}
+     	});
+     	paramWindow.getContentPane().add(SLI_temperature);
+     	SLI_temperature.setBounds(10, 330, 210, 20);
+     	
+     	
+// timer setup ***************************************
+		timer_obj = new Timer(1000, arg->glCanvas.repaint());
 		timer_obj.start();
-	}
-	
-	
-	// GLEventListener method *******************
-	public void display(GLAutoDrawable arg0)
-	{
-		System.out.println("display");
-		GL4 gl = arg0.getGL().getGL4();
 		
-		// get random float
-		float[] col = new float[4];
-		Random randVal = new Random();
-		col[0] = randVal.nextFloat();
-		col[1] = randVal.nextFloat();
-		col[2] = randVal.nextFloat();
-		col[3] = 1.0f;
+		//Animator anim = new Animator(glCanvas);
+		//anim.start();
 		
-		
-		gl.glClearColor(col[0], col[1], col[2], col[3]);
-		gl.glClear(GL4.GL_COLOR_BUFFER_BIT);
-		gl.glFinish();
-		arg0.swapBuffers();
 	}
-	
-	public void dispose(GLAutoDrawable arg0)
-	{
-		System.out.println("dispose");
-	}
-	
-	public void init(GLAutoDrawable arg0)
-	{
-		System.out.println("init");
-		
-		GL4 gl = arg0.getGL().getGL4();
-		gl.glClearColor((float)1.0, (float)1.0, (float)0.0, (float)1.0);
-		gl.glClear(GL4.GL_COLOR_BUFFER_BIT);
-		gl.glFinish();
-	}
-	
-	public void reshape(GLAutoDrawable arg0, int arg1, int arg2, int arg3, int arg4)
-	{
-		//System.out.printf("reshape %d, %d, %d, %d", arg1, arg2, arg3, arg4);
-	}
-	// EventListener method *******************
 	
 	
 	
 	// ActionListener method ******************
-	public void actionPerformed(ActionEvent e)
-	{
-	}
+	//public void actionPerformed(ActionEvent e)
+	//{
+	//}
 	// ActionListener method ******************
 	
 }
